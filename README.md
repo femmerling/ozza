@@ -1,6 +1,6 @@
-# DeeBee
+# Ozza
 
-DeeBee is a collection of code challenge based on [this challenge](https://github.com/WhatsLab/code-challenge)
+Ozza is a collection of code challenge based on [this challenge](https://github.com/WhatsLab/code-challenge)
 
 I will solve the problem starting from the [backend challenge](https://github.com/WhatsLab/code-challenge/blob/master/backend-task.md)
 
