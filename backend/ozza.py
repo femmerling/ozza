@@ -24,7 +24,7 @@ class Ozza(object):
 
     def add_data(self, key, value):
         self._in_memory_data[key] = value
-        self.persist_data()
+        self._persist_data()
 
     def delete_from_cache(self, key):
         self._in_memory_data.pop(key, None)
