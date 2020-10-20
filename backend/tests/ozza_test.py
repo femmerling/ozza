@@ -1,7 +1,7 @@
 import unittest
 
-from ozza import Ozza
 from exceptions import *
+from ozza import Ozza
 
 
 class OzzaTest(unittest.TestCase):
@@ -19,16 +19,15 @@ class OzzaTest(unittest.TestCase):
         self.ozza.create_resource("test-data")
         self.assertTrue("test-data" in self.ozza._in_memory_data)
 
-
     def test_add_data(self):
         with self.assertRaises(EmptyParameterException):
-            self.ozza.add_data(None,None)
+            self.ozza.add_data(None, None)
 
         with self.assertRaises(IdNotFoundException):
             data = dict(name="some-name")
             self.ozza.add_data("test-set", data)
 
-        data = dict(id="some-id",name="some-name")
+        data = dict(id="some-id", name="some-name")
         self.ozza.add_data("test-set", data)
         resource_set = self.ozza.get("test-set")
         self.assertTrue(data in resource_set[0])
@@ -38,17 +37,17 @@ class OzzaTest(unittest.TestCase):
     def test_update_resource(self):
         self.ozza.create_resource("test-data")
         with self.assertRaises(EmptyParameterException):
-            self.ozza.update_resource(None,None,None)
+            self.ozza.update_resource(None, None, None)
         with self.assertRaises(ResourceGroupNotFoundException):
-            self.ozza.update_resource("a-key","haha",{"key":"value"})
+            self.ozza.update_resource("a-key", "haha", {"key": "value"})
         with self.assertRaises(IdNotFoundException):
-            self.ozza.update_resource("test-data", "haha",{"key":"value"})
+            self.ozza.update_resource("test-data", "haha", {"key": "value"})
         with self.assertRaises(MismatchIdException):
-            self.ozza.update_resource("test-data", "haha",{"id":"hah","key":"value"})
+            self.ozza.update_resource("test-data", "haha", {"id": "hah", "key": "value"})
         data = dict(id="some-id", name="some-name")
         self.ozza.add_data("test-data", data)
         data["name"] = "some-updated-name"
-        result = self.ozza.update_resource("test-data","some-id", data)
+        result = self.ozza.update_resource("test-data", "some-id", data)
         self.assertEqual(data.get("name"), result.get("name"))
 
     def test_delete_value_from_resource(self):
@@ -56,9 +55,9 @@ class OzzaTest(unittest.TestCase):
         self.ozza.add_data("test-data", data)
         data = dict(id="some-id2", name="some-name")
         self.ozza.add_data("test-data", data)
-        self.ozza.delete_value_from_resource("test-data","some-id")
+        self.ozza.delete_value_from_resource("test-data", "some-id")
         result = self.ozza.get_resource_by_id("test-data", "some-id")
-        self.assertEqual(result,[])
+        self.assertEqual(result, [])
 
     def test_delete_resource(self):
         self.ozza.create_resource("test-data")
@@ -66,8 +65,8 @@ class OzzaTest(unittest.TestCase):
             self.ozza.delete_resource(None)
         with self.assertRaises(ResourceGroupNotFoundException):
             self.ozza.delete_resource("not found")
-        self.ozza.delete_resource("test-data")
-        self.assertEqual(self.ozza.get("test-data"), [])
+        result = self.ozza.delete_resource("test-data")
+        self.assertEqual(result, "Resource deleted")
 
     def test_get_resource_by_field_value(self):
         data = dict(id="some-id", name="some-name")
@@ -81,9 +80,7 @@ class OzzaTest(unittest.TestCase):
         result1 = self.ozza.get_resource_by_field_value("test-data", "name", "some-name")
         result2 = self.ozza.get_resource_by_field_value("test-data", "name", "s$e")
         self.assertEqual(result1, result2)
-        print(result1)
         self.assertEqual(result1[0].get("name"), data.get("name"))
-
 
     def tearDown(self):
         self.ozza._teardown_data()
