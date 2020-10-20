@@ -2,11 +2,12 @@ import errno
 import fnmatch
 import json
 from datetime import datetime
-from exceptions import *
 from json.decoder import JSONDecodeError
 from os import environ
-from os import path
 from os import makedirs
+from os import path
+
+from exceptions import *
 
 
 class Ozza(object):
@@ -17,33 +18,24 @@ class Ozza(object):
     _in_memory_data = {}
     _test_mode = False
 
-    def __init__(self, test_mode = False):
+    def __init__(self, test_mode=False):
         self._test_mode = test_mode
         self._init_data_file()
 
     def get(self, key):
-        if not key:
-            raise EmptyParameterException()
-        if not self._resource_is_available(key):
-            raise ResourceGroupNotFoundException()
         return self._fetch_matching_resources(key)
 
-    def get_resource_by_id(self, key, id):
-        if not key or not id:
-            raise EmptyParameterException()
-        if not self._resource_is_available:
-            raise ResourceGroupNotFoundException()
-        pass
+    def get_resource_by_id(self, key, id_value):
+        data = self.get_resource_by_field_value(key, "id", id_value)
+        return dict(data=data)
 
-    def update_resorce(self, key, id, value):
-        if not key or not id or not value:
-            raise EmptyParameterException()
-        pass
+    def update_resource(self, key, id_value, value):
+        result = self._update_item_by_key_id(key, id_value, value)
+        return dict(data=result)
 
-    def delete_resource(self, key, id, value):
-        if not key or not id or not value:
-            raise EmptyParameterException()
-        pass
+    def delete_value_from_resource(self, key, id_value):
+        result = self._delete_item_by_key_id(key, id_value)
+        return result
 
     def add_data(self, key, value):
         if not key or not value:
@@ -61,11 +53,10 @@ class Ozza(object):
             raise EmptyParameterException()
         if not self._resource_is_available(key):
             raise ResourceGroupNotFoundException()
-        if not self._field_is_available():
+        if not self._field_is_available(key, field):
             raise FieldNotFoundException()
         value = value.replace("$", "*")
-        result = filter(
-            lambda item: fnmatch.fnmatch(item[field], value), self._in_memory_data.get(key))
+        result = filter(lambda item: fnmatch.fnmatch(item[field], value), self._in_memory_data.get(key))
         return {key: list(result)}
 
     def delete_from_cache(self, key):
@@ -76,13 +67,6 @@ class Ozza(object):
         self._in_memory_data.pop(key, None)
         self._persist_data()
 
-    def _persist_data(self):
-        try:
-            with open(self._storage_location, "w") as data:
-                data.write(json.dumps(self._in_memory_data))
-        except DataWriteException:
-            print("Data can't be written. Waiting for next operation")
-
     def _init_data_file(self):
         filename = self._test_filename if self._test_mode else self._data_filename
         if environ.get('DATA_DIRECTORY'):
@@ -92,7 +76,7 @@ class Ozza(object):
         try:
             self._get_or_create_directory()
             self._storage_location = path.join(self._data_directory, filename)
-        except:
+        except DirectoryOperationException:
             self._storage_location = filename
         finally:
             try:
@@ -111,15 +95,22 @@ class Ozza(object):
         try:
             makedirs(self._data_directory)
         except DirectoryOperationException as error:
-            if error.errno == errno.EEXIST and path.isdir(path):
+            if error.errno == errno.EEXIST and path.isdir(self._data_directory):
                 pass
             else:
                 raise DirectoryCreationException()
 
+    def _persist_data(self):
+        try:
+            with open(self._storage_location, "w") as data:
+                data.write(json.dumps(self._in_memory_data))
+        except DataWriteException:
+            print("Data can't be written. Waiting for next operation")
+
     def _resource_is_available(self, key):
         if not key:
             raise EmptyParameterException()
-        key = key.replace("$","*")
+        key = key.replace("$", "*")
         result = fnmatch.filter(self._in_memory_data.keys(), key)
         return len(list(result)) > 0
 
@@ -128,18 +119,45 @@ class Ozza(object):
             raise EmptyParameterException()
         if not self._resource_is_available(key):
             raise ResourceGroupNotFoundException()
-        result = filter(
-            lambda item: fnmatch.filter(item.keys(), field), self._in_memory_data.get(key))
+        result = filter(lambda item: fnmatch.filter(item.keys(), field), self._in_memory_data.get(key))
         return len(list(result)) > 0
 
-    def _current_unixtime(self):
+    @staticmethod
+    def _current_unixtime():
         epoch = datetime.utcfromtimestamp(0)
         return (datetime.utcnow() - epoch).total_seconds * 1000
 
     def _fetch_matching_resources(self, key):
         if not key:
             raise EmptyParameterException()
-        key = key.replace("$","*")
+        key = key.replace("$", "*")
         matching_keys = fnmatch.filter(self._in_memory_data.keys(), key)
-        return {
-            key: value for key,value in self._in_memory_data.items() if key in list(matching_keys)}
+        return {key: value for key, value in self._in_memory_data.items() if key in list(matching_keys)}
+
+    def _update_item_by_key_id(self, key, id_value, value):
+        if not key or not id_value or not value:
+            raise EmptyParameterException()
+        if not self._resource_is_available(key):
+            raise ResourceGroupNotFoundException()
+        if "id" not in value:
+            raise IdNotFoundException()
+        if value.get("id") != id_value:
+            raise MismatchIdException()
+        for idx, item in enumerate(self._in_memory_data.get(key)):
+            if item.get("id") == id_value:
+                self._in_memory_data.get(key)[idx] = value
+                self._persist_data()
+                break
+        return value
+
+    def _delete_item_by_key_id(self, key, id_value):
+        if not key or not id_value:
+            raise EmptyParameterException()
+        if not self._resource_is_available(key):
+            raise ResourceGroupNotFoundException()
+        for idx, item in enumerate(self._in_memory_data.get(key)):
+            if item.get("id") == id_value:
+                del self._in_memory_data.get(key)[idx]
+                self._persist_data()
+                break
+        return "Delete successful"
