@@ -2,7 +2,7 @@ import errno
 import fnmatch
 import io
 import json
-from datetime import datetime
+from utils import get_current_miliseconds
 from json.decoder import JSONDecodeError
 from os import environ
 from os import makedirs
@@ -28,8 +28,8 @@ class Ozza(object):
         return self._fetch_matching_resources(key)
 
     def get_resource_by_id(self, key, id_value):
-        data = self.get_resource_by_field_value(key, "id", id_value)
-        return dict(data=data)
+        result = self.get_resource_by_field_value(key, "id", id_value)
+        return result
 
     def update_resource(self, key, id_value, value):
         result = self._update_item_by_key_id(key, id_value, value)
@@ -52,7 +52,7 @@ class Ozza(object):
             raise IdNotFoundException()
         if not self._resource_is_available(key):
             self._in_memory_data[key] = []
-        value["created_at"] = self._current_unixtime()
+        value["created_at"] = get_current_miliseconds()
         self._in_memory_data.get(key).append(value)
         self._persist_data()
 
@@ -65,7 +65,7 @@ class Ozza(object):
             raise FieldNotFoundException()
         value = value.replace("$", "*")
         result = filter(lambda item: fnmatch.fnmatch(item[field], value), self._in_memory_data.get(key))
-        return {key: list(result)}
+        return list(result)
 
     def delete_resource(self, key):
         if not key:
@@ -127,10 +127,6 @@ class Ozza(object):
         result = filter(lambda item: fnmatch.filter(item.keys(), field), self._in_memory_data.get(key))
         return len(list(result)) > 0
 
-    @staticmethod
-    def _current_unixtime():
-        epoch = datetime.utcfromtimestamp(0)
-        return (datetime.utcnow() - epoch).total_seconds() * 1000
 
     def _fetch_matching_resources(self, key):
         if not key:
@@ -152,7 +148,7 @@ class Ozza(object):
             if item.get("id") == id_value:
                 self._in_memory_data.get(key)[idx] = value
                 self._persist_data()
-                return value
+                return self._in_memory_data.get(key)[idx]
 
     def _delete_item_by_key_id(self, key, id_value):
         if not key or not id_value:

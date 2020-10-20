@@ -58,7 +58,7 @@ class OzzaTest(unittest.TestCase):
         self.ozza.add_data("test-data", data)
         self.ozza.delete_value_from_resource("test-data","some-id")
         result = self.ozza.get_resource_by_id("test-data", "some-id")
-        self.assertEqual(result.get("data").get("test-data"),[])
+        self.assertEqual(result,[])
 
     def test_delete_resource(self):
         self.ozza.create_resource("test-data")
@@ -82,7 +82,7 @@ class OzzaTest(unittest.TestCase):
         result2 = self.ozza.get_resource_by_field_value("test-data", "name", "s$e")
         self.assertEqual(result1, result2)
         print(result1)
-        self.assertEqual(result1.get("test-data")[0].get("name"), data.get("name"))
+        self.assertEqual(result1[0].get("name"), data.get("name"))
 
 
     def tearDown(self):
