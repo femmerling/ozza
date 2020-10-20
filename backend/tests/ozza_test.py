@@ -1,4 +1,5 @@
 import unittest
+import time
 
 from exceptions import *
 from ozza import Ozza
@@ -81,6 +82,15 @@ class OzzaTest(unittest.TestCase):
         result2 = self.ozza.get_resource_by_field_value("test-data", "name", "s$e")
         self.assertEqual(result1, result2)
         self.assertEqual(result1[0].get("name"), data.get("name"))
+
+        data = dict(id="some-id2", name="some-name2")
+        self.ozza.add_data("test-data", data, expiry=2)
+        not_expired = self.ozza.get_resource_by_field_value("test-data","name","some-name2")
+        self.assertEqual(not_expired[0].get("id"), "some-id2")
+        time.sleep(3)
+        expired = self.ozza.get_resource_by_field_value("test-data","name","some-name2")
+        self.assertEqual(len(expired), 0)
+
 
     def tearDown(self):
         self.ozza._teardown_data()

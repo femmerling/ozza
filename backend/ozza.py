@@ -9,7 +9,7 @@ from os import path
 from os import remove
 
 from exceptions import *
-from utils import get_current_miliseconds
+from utils import get_unix_millis, current_utctime, get_expiry_time
 
 
 class Ozza(object):
@@ -99,12 +99,13 @@ class Ozza(object):
         self._in_memory_data[key] = []
         self._persist_data()
 
-    def add_data(self, key, value):
+    def add_data(self, key, value, expiry=0):
         """
         Add a new member data to a resource
         Args:
             key: String, identifier of resource
             value: Dictionary, data to be added. Must contain `id` field
+            expiry: Int, Expiry time in minutes. 0 means no expiry set.
         Returns:
             Member dictionary object added
         """
@@ -114,7 +115,9 @@ class Ozza(object):
             raise IdNotFoundException()
         if not self._resource_is_available(key):
             self._in_memory_data[key] = []
-        value["created_at"] = get_current_miliseconds()
+        creation_time = current_utctime()
+        value["created_at"] = get_unix_millis(current_utctime())
+        value["expiry_time"] = get_expiry_time(expiry, creation_time) if expiry > 0 else 0
         self._in_memory_data.get(key).append(value)
         self._persist_data()
         value_id = value.get("id")
@@ -138,8 +141,23 @@ class Ozza(object):
         if not self._field_is_available(key, field):
             raise FieldNotFoundException()
         value = value.replace("$", "*")
-        result = filter(lambda item: fnmatch.fnmatch(item[field], value), self._in_memory_data.get(key))
+        result = filter(
+            lambda item: fnmatch.fnmatch(item[field], value) and self._expiry_is_valid(item),
+            self._in_memory_data.get(key))
         return list(result)
+
+    def _expiry_is_valid(self, item):
+        """
+        Performs check if expiry time is valid.
+        Args:
+            item: Dictionary, member object
+        Returns:
+            Boolean, expired or not if conditions are met
+        """
+        if item.get("expiry_time") == 0:
+            return True
+        else:
+            return get_unix_millis(current_utctime()) < item.get("expiry_time")
 
     def delete_resource(self, key):
         """
