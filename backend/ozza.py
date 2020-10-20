@@ -1,11 +1,13 @@
 import errno
 import fnmatch
+import io
 import json
 from datetime import datetime
 from json.decoder import JSONDecodeError
 from os import environ
 from os import makedirs
 from os import path
+from os import remove
 
 from exceptions import *
 
@@ -31,11 +33,17 @@ class Ozza(object):
 
     def update_resource(self, key, id_value, value):
         result = self._update_item_by_key_id(key, id_value, value)
-        return dict(data=result)
+        return result
 
     def delete_value_from_resource(self, key, id_value):
         result = self._delete_item_by_key_id(key, id_value)
         return result
+
+    def create_resource(self, key):
+        if not key:
+            raise EmptyParameterException()
+        self._in_memory_data[key] = []
+        self._persist_data()
 
     def add_data(self, key, value):
         if not key or not value:
@@ -44,7 +52,7 @@ class Ozza(object):
             raise IdNotFoundException()
         if not self._resource_is_available(key):
             self._in_memory_data[key] = []
-        value["created_at"] = self._current_unixtime
+        value["created_at"] = self._current_unixtime()
         self._in_memory_data.get(key).append(value)
         self._persist_data()
 
@@ -59,7 +67,7 @@ class Ozza(object):
         result = filter(lambda item: fnmatch.fnmatch(item[field], value), self._in_memory_data.get(key))
         return {key: list(result)}
 
-    def delete_from_cache(self, key):
+    def delete_resource(self, key):
         if not key:
             raise EmptyParameterException()
         if not self._resource_is_available(key):
@@ -73,28 +81,25 @@ class Ozza(object):
             self._data_directory = environ.get("DATA_DIRECTORY")
         if environ.get('DATA_FILENAME'):
             self._data_filename = environ.get("DATA_FILENAME")
+        self._storage_location = path.join(self._data_directory, filename)
         try:
+            with open(self._storage_location, "w") as data:
+                self._in_memory_data = json.load(data)
+        except io.UnsupportedOperation:
+            self._in_memory_data = dict()
+            self._persist_data()
+        except JSONDecodeError:
+            self._in_memory_data = dict()
+            self._persist_data()
+        except FileNotFoundError:
+            self._in_memory_data = dict()
             self._get_or_create_directory()
-            self._storage_location = path.join(self._data_directory, filename)
-        except DirectoryOperationException:
-            self._storage_location = filename
-        finally:
-            try:
-                with open(self._storage_location, "w") as data:
-                    self._in_memory_data = json.load(data)
-            except DataWriteException:
-                print("Data load error. Creating new file..")
-                with open(self._storage_location, "w") as data:
-                    data.write("")
-            except JSONDecodeError:
-                print("Data can't be decoded. Creating new file..")
-                with open(self._storage_location, "w") as data:
-                    data.write("")
+            self._persist_data()
 
     def _get_or_create_directory(self):
         try:
             makedirs(self._data_directory)
-        except DirectoryOperationException as error:
+        except FileExistsError as error:
             if error.errno == errno.EEXIST and path.isdir(self._data_directory):
                 pass
             else:
@@ -104,7 +109,7 @@ class Ozza(object):
         try:
             with open(self._storage_location, "w") as data:
                 data.write(json.dumps(self._in_memory_data))
-        except DataWriteException:
+        except IOError:
             print("Data can't be written. Waiting for next operation")
 
     def _resource_is_available(self, key):
@@ -125,21 +130,21 @@ class Ozza(object):
     @staticmethod
     def _current_unixtime():
         epoch = datetime.utcfromtimestamp(0)
-        return (datetime.utcnow() - epoch).total_seconds * 1000
+        return (datetime.utcnow() - epoch).total_seconds() * 1000
 
     def _fetch_matching_resources(self, key):
         if not key:
             raise EmptyParameterException()
         key = key.replace("$", "*")
         matching_keys = fnmatch.filter(self._in_memory_data.keys(), key)
-        return {key: value for key, value in self._in_memory_data.items() if key in list(matching_keys)}
+        return [value for key, value in self._in_memory_data.items() if key in list(matching_keys)]
 
     def _update_item_by_key_id(self, key, id_value, value):
         if not key or not id_value or not value:
             raise EmptyParameterException()
         if not self._resource_is_available(key):
             raise ResourceGroupNotFoundException()
-        if "id" not in value:
+        if "id" not in value.keys():
             raise IdNotFoundException()
         if value.get("id") != id_value:
             raise MismatchIdException()
@@ -147,8 +152,7 @@ class Ozza(object):
             if item.get("id") == id_value:
                 self._in_memory_data.get(key)[idx] = value
                 self._persist_data()
-                break
-        return value
+                return value
 
     def _delete_item_by_key_id(self, key, id_value):
         if not key or not id_value:
@@ -161,3 +165,7 @@ class Ozza(object):
                 self._persist_data()
                 break
         return "Delete successful"
+
+    def _teardown_data(self):
+        if path.exists(self._storage_location):
+            remove(self._storage_location)
