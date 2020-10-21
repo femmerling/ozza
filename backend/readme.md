@@ -1,6 +1,7 @@
 # Ozza Store
 
-Key-Value store engine with a HTTP Interface.
+In sanscrit, Ozza has a hardworking and helpful trait. This engine is designed to do that.
+Ozza is a Key-Value store engine with a HTTP Interface.
 
 There are 2 main concepts around it.
 
