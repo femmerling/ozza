@@ -4,21 +4,13 @@ class OzzaException(Exception):
     def __init__(self, message, status_code=None):
         Exception.__init__(self)
         self.message = message
-        if status_code:
-            self.status_code = status_code
+        self.status_code = status_code
 
 
 class EmptyParameterException(OzzaException):
     def __init__(self, message="Method parameter should not be empty"):
         self.message = message
         self.status_code = 400
-        super().__init__(self)
-
-
-class DirectoryCreationException(OzzaException):
-    def __init__(self, message="Can't create directory"):
-        self.message = message
-        self.status_code = 500
         super().__init__(self)
 
 
