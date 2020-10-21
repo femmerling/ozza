@@ -1,8 +1,7 @@
-import unittest
-import time
 import os
+import time
+import unittest
 
-from json.decoder import JSONDecodeError
 from exceptions import *
 from ozza import Ozza
 
@@ -20,7 +19,6 @@ class OzzaTest(unittest.TestCase):
         os.environ["DATA_FILENAME"] = "brokenjson.oz"
         db = Ozza()
         self.assertEqual(db._in_memory_data, {})
-
 
     def test_create_resource(self):
         with self.assertRaises(EmptyParameterException):
@@ -94,22 +92,21 @@ class OzzaTest(unittest.TestCase):
 
         data = dict(id="some-id2", name="some-name2")
         self.ozza.add_data("test-data", data, expiry=2)
-        not_expired = self.ozza.get_resource_by_field_value("test-data","name","some-name2")
+        not_expired = self.ozza.get_resource_by_field_value("test-data", "name", "some-name2")
         self.assertEqual(not_expired[0].get("id"), "some-id2")
         time.sleep(3)
-        expired = self.ozza.get_resource_by_field_value("test-data","name","some-name2")
+        expired = self.ozza.get_resource_by_field_value("test-data", "name", "some-name2")
         self.assertEqual(len(expired), 0)
 
     def test_delete_resource_by_key_id(self):
         with self.assertRaises(EmptyParameterException):
             self.ozza.delete_resource_by_id(None, None)
         with self.assertRaises(ResourceGroupNotFoundException):
-            self.ozza.delete_resource_by_id("some-key","some-id")
+            self.ozza.delete_resource_by_id("some-key", "some-id")
         data = dict(id="some-id", name="some-name")
         self.ozza.add_data("test-data", data)
-        result = self.ozza.delete_resource_by_id("test-data","some-id")
+        result = self.ozza.delete_resource_by_id("test-data", "some-id")
         self.assertEqual(result, "Delete successful")
-
 
     def tearDown(self):
         self.ozza._teardown_data()
