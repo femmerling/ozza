@@ -1,6 +1,5 @@
 import errno
 import fnmatch
-import io
 import json
 from json.decoder import JSONDecodeError
 from os import environ
@@ -118,7 +117,10 @@ class Ozza(object):
         creation_time = current_utctime()
         value["created_at"] = get_unix_millis(current_utctime())
         value["expiry_time"] = get_expiry_time(expiry, creation_time) if expiry > 0 else 0
-        self._in_memory_data.get(key).append(value)
+        if self.member_id_existed(key, value.get("id")):
+            self._update_item_by_key_id(key, value.get("id"), value)
+        else:
+            self._in_memory_data.get(key).append(value)
         self._persist_data()
         value_id = value.get("id")
         return self.get_resource_by_id(key, value_id)[0]
@@ -199,9 +201,9 @@ class Ozza(object):
             self._data_filename = environ.get("DATA_FILENAME")
         self._storage_location = path.join(self._data_directory, filename)
         try:
-            with open(self._storage_location, "w") as data:
+            with open(self._storage_location) as data:
                 self._in_memory_data = json.load(data)
-        except io.UnsupportedOperation:
+        except IOError:
             self._in_memory_data = dict()
             self._persist_data()
         except JSONDecodeError:
@@ -222,7 +224,7 @@ class Ozza(object):
             if error.errno == errno.EEXIST and path.isdir(self._data_directory):
                 pass
             else:
-                raise DirectoryCreationException()
+                print("Can't create directory, please check permission")
 
     def _persist_data(self):
         """
@@ -276,7 +278,10 @@ class Ozza(object):
             raise EmptyParameterException()
         key = key.replace("$", "*")
         matching_keys = fnmatch.filter(self._in_memory_data.keys(), key)
-        return [value for key, value in self._in_memory_data.items() if key in list(matching_keys)]
+        data = []
+        for matching_key in matching_keys:
+            [data.append(item) for item in self._in_memory_data.get(matching_key)]
+        return data
 
     def _update_item_by_key_id(self, key, id_value, value):
         """
@@ -317,12 +322,35 @@ class Ozza(object):
             raise EmptyParameterException()
         if not self._resource_is_available(key):
             raise ResourceGroupNotFoundException()
+        deleted = False
         for idx, item in enumerate(self._in_memory_data.get(key)):
             if item.get("id") == id_value:
                 del self._in_memory_data.get(key)[idx]
                 self._persist_data()
+                deleted = True
                 break
-        return "Delete successful"
+        if deleted:
+            return "Delete successful"
+        else:
+            return "Member not found"
+
+    def member_id_existed(self, key, id_value):
+        """
+        Checks if an id exist at a given resource
+        Args:
+            key: String, identifier of the resource
+            id_value: String, member id value to check
+
+        Returns:
+
+        """
+        if not key or not id_value:
+            raise EmptyParameterException()
+        if not self._resource_is_available(key):
+            raise ResourceGroupNotFoundException()
+        result = filter(lambda item: item.get("id") == id_value, self._in_memory_data.get(key))
+        result = list(result)
+        return len(list(result)) > 0
 
     def _teardown_data(self):
         """
@@ -331,3 +359,23 @@ class Ozza(object):
         """
         if path.exists(self._storage_location):
             remove(self._storage_location)
+
+    def get_member_by_value(self, key, value):
+        """
+        Filters any members by value given
+        Args:
+            key: String, identifier of resource
+            value: String, expected filter value
+        Returns:
+            List of matching members
+        """
+        if not key or not value:
+            raise EmptyParameterException()
+        if not self._resource_is_available(key):
+            raise ResourceGroupNotFoundException()
+        value = value.replace("$", "*")
+        result = filter(lambda item: fnmatch.filter(self._stringify_value_list(item), value), self.get(key))
+        return list(result)
+
+    def _stringify_value_list(self, data_dict):
+        return [str(value) if type(value) is not str else value for value in list(data_dict.values())]
