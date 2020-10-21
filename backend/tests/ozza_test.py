@@ -15,7 +15,7 @@ class OzzaTest(unittest.TestCase):
         self.assertEqual(self.ozza._in_memory_data, {})
 
     def test_json_decode_error(self):
-        os.environ["DATA_DIRECTORY"] = "test/"
+        os.environ["DATA_DIRECTORY"] = "tests/"
         os.environ["DATA_FILENAME"] = "brokenjson.oz"
         db = Ozza()
         self.assertEqual(db._in_memory_data, {})
@@ -38,9 +38,12 @@ class OzzaTest(unittest.TestCase):
         data = dict(id="some-id", name="some-name")
         self.ozza.add_data("test-set", data)
         resource_set = self.ozza.get("test-set")
-        self.assertTrue(data in resource_set[0])
+        self.assertEqual(resource_set[0].get("name"), data.get("name"))
         resource_set = self.ozza.get("t$t")
-        self.assertTrue(data in resource_set[0])
+        self.assertEqual(resource_set[0].get("name"), data.get("name"))
+        data = dict(id="some-id", name="some-name2")
+        self.ozza.add_data("test-set", data)
+        self.assertEqual(resource_set[0].get("name"), data.get("name"))
 
     def test_update_resource(self):
         self.ozza.create_resource("test-data")
@@ -107,6 +110,65 @@ class OzzaTest(unittest.TestCase):
         self.ozza.add_data("test-data", data)
         result = self.ozza.delete_resource_by_id("test-data", "some-id")
         self.assertEqual(result, "Delete successful")
+        result = self.ozza.delete_resource_by_id("test-data", "someid")
+        self.assertEqual(result, "Member not found")
+
+    def test_get_member_by_value(self):
+        with self.assertRaises(EmptyParameterException):
+            self.ozza.get_member_by_value(None, None)
+        with self.assertRaises(ResourceGroupNotFoundException):
+            self.ozza.get_member_by_value("some-key", "some-id")
+        data1 = dict(id="some-id1", name="some-name1")
+        self.ozza.add_data("test-data", data1)
+        data2 = dict(id="some-id2", name="some-name2")
+        self.ozza.add_data("test-data", data2)
+        data3 = dict(id="some-id3", name="some-name3")
+        self.ozza.add_data("test-data", data3)
+        data4 = dict(id="some-id4", name="some-name4")
+        self.ozza.add_data("test-data", data4)
+        data5 = dict(id="some-id5", name="some-name5")
+        self.ozza.add_data("test-data", data5)
+        data6 = dict(id="some-id6", name="some-name6")
+        self.ozza.add_data("test-data", data6)
+        result = self.ozza.get_member_by_value("test-data", "some-name5")
+        self.assertEqual(result[0].get("name"), data5.get("name"))
+
+    def test_member_id_existed(self):
+        with self.assertRaises(EmptyParameterException):
+            self.ozza.member_id_existed(None, None)
+        with self.assertRaises(ResourceGroupNotFoundException):
+            self.ozza.member_id_existed("xyz", "abc")
+        data1 = dict(id="some-id1", name="some-name1")
+        self.ozza.add_data("test-data", data1)
+        data2 = dict(id="some-id2", name="some-name2")
+        self.ozza.add_data("test-data", data2)
+        data3 = dict(id="some-id3", name="some-name3")
+        self.ozza.add_data("test-data", data3)
+        self.assertTrue(self.ozza.member_id_existed("test-data", "some-id3"))
+        self.assertFalse(self.ozza.member_id_existed("test-data", "some-id"))
+
+    def test_resource_is_available(self):
+        with self.assertRaises(EmptyParameterException):
+            self.ozza._resource_is_available(None)
+        self.ozza.create_resource("test-data")
+        self.assertTrue(self.ozza._resource_is_available("test-data"))
+
+    def test_field_is_available(self):
+        with self.assertRaises(EmptyParameterException):
+            self.ozza._field_is_available(None, None)
+        with self.assertRaises(ResourceGroupNotFoundException):
+            self.ozza._field_is_available("aa", "bb")
+        data1 = dict(id="some-id1", name="some-name1")
+        self.ozza.add_data("test-data", data1)
+        self.assertTrue(self.ozza._field_is_available("test-data", "name"))
+
+    def test_matching_resource(self):
+        with self.assertRaises(EmptyParameterException):
+            self.ozza._fetch_matching_resources(None)
+        data1 = dict(id="some-id1", name="some-name1")
+        self.ozza.add_data("test-data", data1)
+        result = self.ozza._fetch_matching_resources("t$a")
+        self.assertEqual(result[0].get("name"), data1.get("name"))
 
     def tearDown(self):
         self.ozza._teardown_data()
