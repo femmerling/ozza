@@ -175,15 +175,27 @@ class Ozza(object):
         self._persist_data()
         return "Resource deleted"
 
+    def delete_resource_by_id(self, key, id_value):
+        """
+        Deletes a member from a given resource
+        Args:
+            key: String, identifier of resource
+            id_value: String, value of `id` in member. Must be exact match, does not accept wildcard
+        Returns:
+            String result message
+        """
+        result = self._delete_item_by_key_id(key, id_value)
+        return result
+
     def _init_data_file(self):
         """
         Initialization of data file. If directory and file does not exist will create it.
         If directory and file already exist will load data into memory.
         """
         filename = self._test_filename if self._test_mode else self._data_filename
-        if environ.get('DATA_DIRECTORY'):
+        if environ.get("DATA_DIRECTORY"):
             self._data_directory = environ.get("DATA_DIRECTORY")
-        if environ.get('DATA_FILENAME'):
+        if environ.get("DATA_FILENAME"):
             self._data_filename = environ.get("DATA_FILENAME")
         self._storage_location = path.join(self._data_directory, filename)
         try:
