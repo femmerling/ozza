@@ -15,11 +15,11 @@ def create_api():
     API middleware is used to handle logging output. Default logging does not provide enough information for metrics
     """
     @api.middleware('request')
-    async def add_start_time(request):
+    async def embed_start_time(request):
         request.ctx.start_time = time.time()
 
     @api.middleware('response')
-    async def add_spent_time(request, response):
+    async def log_request(request, response):
         spend_time = round((time.time() - request.ctx.start_time) * 1000)
         print("[{}] [ACCESS] LEN:{}b\tLAT:{}ms IP:{} STATUS:{} {}\t{} {}".format(
             datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
