@@ -8,7 +8,7 @@ I'll create a native iOS and a native Android app that will consume the HTTP int
 
 Current status:
 
-- [x] Backend
+- [x] [Backend]()
 - [ ] iOS Native App
 - [ ] Android Native App
 
