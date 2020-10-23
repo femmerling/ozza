@@ -26,7 +26,10 @@ class ApiService:
             return []
 
     async def check_member_by_id(self, key, id_value):
-        return self.ozza.member_id_existed(key, id_value)
+        try:
+            return self.ozza.member_id_existed(key, id_value)
+        except ResourceGroupNotFoundException:
+            return False
 
     async def delete_member_by_id(self, key, id_value):
         try:
