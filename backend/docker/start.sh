@@ -3,7 +3,11 @@
 case $1 in
   "run")
     shift
-    #gunicorn app:app --bind ${HOST:-0.0.0.0}:${PORT:-5000} --worker-class sanic.worker.GunicornWorker -w 3 --capture-output
+    echo "Starting Ozza Server at port 5000"
+    echo "---------------------------------"
+    echo "Activating 4 workers...."
+    echo "Workers activated"
+    echo "Ozza server is now serving"
     python -m sanic app.app --host=${HOST:0.0.0.0} --port=5000 --workers=4    
     ;;
   "test")

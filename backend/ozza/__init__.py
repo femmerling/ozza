@@ -1,16 +1,17 @@
 import errno
 import fnmatch
-import pickle
+import json
 from os import environ
 from os import makedirs
 from os import path
 from os import remove
+from json.decoder import JSONDecodeError
 
-from exceptions import EmptyParameterException
-from exceptions import FieldNotFoundException
-from exceptions import IdNotFoundException
-from exceptions import InvalidFilterFormatException
-from exceptions import ResourceNotFoundException
+from ozza.exceptions import EmptyParameterException
+from ozza.exceptions import FieldNotFoundException
+from ozza.exceptions import IdNotFoundException
+from ozza.exceptions import InvalidFilterFormatException
+from ozza.exceptions import ResourceNotFoundException
 from utils import current_utctime
 from utils import get_expiry_time
 from utils import get_timestamp_from_millis
@@ -30,22 +31,30 @@ class Ozza:
         self._init_data_file()
 
     def _init_data_file(self):
+        """
+                Initialization of data file. If directory and file does not exist will create it.
+                If directory and file already exist will load data into memory.
+                """
+        filename = self._test_filename if self._test_mode else self._data_filename
         if environ.get("DATA_DIRECTORY"):
             self._data_directory = environ.get("DATA_DIRECTORY")
         if environ.get("DATA_FILENAME"):
             self._data_filename = environ.get("DATA_FILENAME")
-        filename = self._test_filename if self._test_mode else self._data_filename
         self._storage_location = path.join(self._data_directory, filename)
         try:
-            with open(self._storage_location, "rb") as data:
-                self._memory_data = pickle.loads(data)
+            with open(self._storage_location) as data:
+                self._memory_data = json.load(data)
         except FileNotFoundError:
             self._memory_data = dict()
             self._get_or_create_directory()
             self._persist_data()
-        except (IOError, TypeError):
+        except IOError:
             self._memory_data = dict()
             self._persist_data()
+        except JSONDecodeError:
+            self._memory_data = dict()
+            self._persist_data()
+
 
     def _get_or_create_directory(self):
         try:
@@ -58,10 +67,10 @@ class Ozza:
 
     def _persist_data(self):
         try:
-            with open(self._storage_location, "wb") as data:
-                pickle.dump(self._memory_data, data, protocol=pickle.HIGHEST_PROTOCOL)
+            with open(self._storage_location, "w") as data:
+                data.write(json.dumps(self._memory_data))
         except IOError:
-            print("Data can't be written. Possible I/O error or permission issue")
+            print("Data can't be written. Waiting for next operation")
 
     def get_resource(self, key):
         return self._fetch_matching_resource(key)
@@ -86,6 +95,7 @@ class Ozza:
 
     def get_member(self, key, id_value):
         result = self._fetch_matching_member_by_field(key, id_value)
+        print(result)
         return result[0] if len(result) > 0 else []
 
     def put_member(self, key, member_value, expiry=0):

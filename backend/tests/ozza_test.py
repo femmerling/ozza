@@ -2,7 +2,7 @@ import os
 import time
 import unittest
 
-from exceptions import *
+from ozza.exceptions import *
 from ozza import Ozza
 
 
