@@ -28,7 +28,7 @@ class MismatchIdException(OzzaException):
         super().__init__(self)
 
 
-class ResourceGroupNotFoundException(OzzaException):
+class ResourceNotFoundException(OzzaException):
     def __init__(self, message="Resource with that key was not found"):
         self.message = message
         self.status_code = 404
@@ -39,4 +39,10 @@ class FieldNotFoundException(OzzaException):
     def __init__(self, message="Requested field was not found in data"):
         self.message = message
         self.status_code = 500
+        super().__init__(self)
+
+class InvalidFilterFormatException(OzzaException):
+    def __init__(self, message="Filter item must be dict using `{\"field\":<field name>, \"value\":<field value>}` format"):
+        self.message = message
+        self.status_code = 400
         super().__init__(self)

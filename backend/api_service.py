@@ -1,4 +1,4 @@
-from exceptions import ResourceGroupNotFoundException
+from exceptions import ResourceNotFoundException
 from ozza import Ozza
 
 
@@ -10,7 +10,7 @@ class ApiService:
     async def get_resource(self, key):
         try:
             return self.ozza.get(key)
-        except ResourceGroupNotFoundException:
+        except ResourceNotFoundException:
             return []
 
     async def delete_resource(self, key):
@@ -22,19 +22,19 @@ class ApiService:
     async def get_member_by_id(self, key, id_value):
         try:
             return self.ozza.get_resource_by_id(key, id_value)
-        except ResourceGroupNotFoundException:
+        except ResourceNotFoundException:
             return []
 
     async def check_member_by_id(self, key, id_value):
         try:
             return self.ozza.member_id_existed(key, id_value)
-        except ResourceGroupNotFoundException:
+        except ResourceNotFoundException:
             return False
 
     async def delete_member_by_id(self, key, id_value):
         try:
             return self.ozza.delete_resource_by_id(key, id_value)
-        except ResourceGroupNotFoundException:
+        except ResourceNotFoundException:
             return {}
 
     async def get_matching_member_by_value(self, key, value):

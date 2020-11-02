@@ -139,7 +139,7 @@ class Ozza(object):
         if not key or not field or not value:
             raise EmptyParameterException()
         if not self._resource_is_available(key):
-            raise ResourceGroupNotFoundException()
+            raise ResourceNotFoundException()
         if not self._field_is_available(key, field):
             raise FieldNotFoundException()
         value = value.replace("$", "*")
@@ -172,7 +172,7 @@ class Ozza(object):
         if not key:
             raise EmptyParameterException()
         if not self._resource_is_available(key):
-            raise ResourceGroupNotFoundException()
+            raise ResourceNotFoundException()
         self._in_memory_data.pop(key, None)
         self._persist_data()
         return "Resource deleted"
@@ -262,7 +262,7 @@ class Ozza(object):
         if not key or not field:
             raise EmptyParameterException()
         if not self._resource_is_available(key):
-            raise ResourceGroupNotFoundException()
+            raise ResourceNotFoundException()
         result = filter(lambda item: fnmatch.filter(item.keys(), field), self._in_memory_data.get(key))
         return len(list(result)) > 0
 
@@ -296,7 +296,7 @@ class Ozza(object):
         if not key or not id_value or not value:
             raise EmptyParameterException()
         if not self._resource_is_available(key):
-            raise ResourceGroupNotFoundException()
+            raise ResourceNotFoundException()
         if "id" not in value.keys():
             raise IdNotFoundException()
         if value.get("id") != id_value:
@@ -321,7 +321,7 @@ class Ozza(object):
         if not key or not id_value:
             raise EmptyParameterException()
         if not self._resource_is_available(key):
-            raise ResourceGroupNotFoundException()
+            raise ResourceNotFoundException()
         deleted = False
         for idx, item in enumerate(self._in_memory_data.get(key)):
             if item.get("id") == id_value:
@@ -347,7 +347,7 @@ class Ozza(object):
         if not key or not id_value:
             raise EmptyParameterException()
         if not self._resource_is_available(key):
-            raise ResourceGroupNotFoundException()
+            raise ResourceNotFoundException()
         result = filter(lambda item: item.get("id") == id_value, self._in_memory_data.get(key))
         result = list(result)
         return len(list(result)) > 0
@@ -372,7 +372,7 @@ class Ozza(object):
         if not key or not value:
             raise EmptyParameterException()
         if not self._resource_is_available(key):
-            raise ResourceGroupNotFoundException()
+            raise ResourceNotFoundException()
         value = value.replace("$", "*")
         result = filter(lambda item: fnmatch.filter(self._stringify_value_list(item), value), self.get(key))
         return list(result)

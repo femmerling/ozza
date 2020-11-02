@@ -33,3 +33,6 @@ def current_utctime():
     Returns current utc Datetime object for standardization purposes
     """
     return datetime.utcnow()
+
+def get_timestamp_from_millis(millis):
+    return datetime.fromtimestamp(millis/1000)
