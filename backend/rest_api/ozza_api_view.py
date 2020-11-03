@@ -4,15 +4,14 @@ class OzzaApiView(HTTPMethodView):
 
     def dispatch_request(self, request, service=None, *args, **kwargs, ):
         handler = getattr(self, request.method.lower(), None)
-        request.ctx.service = service
-        return handler(request, *args, **kwargs)
+        return handler(request, api_service=service, *args, **kwargs)
 
     @classmethod
     def as_view(cls, *class_args, **class_kwargs):
 
         def view(*args, **kwargs):
             self = view.view_class()
-            return self.dispatch_request(service=class_args[0], *args, **kwargs)
+            return self.dispatch_request(service=kwargs.get("api_service"), *args, **kwargs)
 
         if cls.decorators:
             view.__module__ = cls.__module__

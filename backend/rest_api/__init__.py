@@ -31,8 +31,8 @@ def create_api():
             request.query_string
         ))
 
-    api.add_route(ResourceApi.as_view(service), "/<resource>")
-    api.add_route(MemberApi.as_view(service), "/<resource>/<id_value>")
+    api.add_route(ResourceApi.as_view(service=service), "/<resource>")
+    api.add_route(MemberApi.as_view(service=service), "/<resource>/<id_value>")
 
     return api
 
