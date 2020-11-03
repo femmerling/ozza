@@ -67,7 +67,7 @@ The following APIs are available:
 ### GET /{resource}
 
 This will fetch all the member of the keys.
-<br/>Filtering function is also available using `/{resource}?filter=word` or use the `$` wilcard to return any matching in between the character `/{resource}?filter=w$d`
+<br/>Filtering function is also available using `/{resource}?filter=word` or use the `*` wilcard to return any matching in between the character `/{resource}?filter=w*d`
 <br/>Will return empty result if member not found or resource group not found.
 ### PUT /{resource}
 This will create a new member in the resource. Requires a JSON body payload with `Content-Type: Application/json` header.<br/>JSON body must have `id` field. Other than that field the JSON structure is free.
@@ -80,12 +80,6 @@ This will check if a given member `id` value existed in the resource. Will retur
 
 ### DELETE /{resource}/{id}
 This will delete a specific member from the resource
-
-## Limitations
-
-Currently have the following limitation:
-
-* Does not have write lock functionalities. If 2 requests come at the same time might interfere with integrity. Will develop along with time.
 
 ## Test Environment
 
