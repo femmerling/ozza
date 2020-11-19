@@ -21,13 +21,6 @@ class IdNotFoundException(OzzaException):
         super().__init__(self)
 
 
-class MismatchIdException(OzzaException):
-    def __init__(self, message="Value `id` mismatched existing `id`"):
-        self.message = message
-        self.status_code = 400
-        super().__init__(self)
-
-
 class ResourceNotFoundException(OzzaException):
     def __init__(self, message="Resource with that key was not found"):
         self.message = message
@@ -41,8 +34,10 @@ class FieldNotFoundException(OzzaException):
         self.status_code = 500
         super().__init__(self)
 
+
 class InvalidFilterFormatException(OzzaException):
-    def __init__(self, message="Filter item must be dict using `{\"field\":<field name>, \"value\":<field value>}` format"):
+    def __init__(self,
+                 message="Filter item must be dict using `{\"field\":<field name>, \"value\":<field value>}` format"):
         self.message = message
         self.status_code = 400
         super().__init__(self)

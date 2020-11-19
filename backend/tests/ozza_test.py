@@ -2,8 +2,8 @@ import os
 import time
 import unittest
 
-from ozza.exceptions import *
 from ozza import Ozza
+from ozza.exceptions import *
 
 
 class OzzaTest(unittest.TestCase):
@@ -174,25 +174,40 @@ class OzzaTest(unittest.TestCase):
         with self.assertRaises(EmptyParameterException):
             self.ozza.multiple_filter_member(None, None, condition="or")
         with self.assertRaises(ResourceNotFoundException):
-            self.ozza.multiple_filter_member("test_data",[{"id":"1"}])
+            self.ozza.multiple_filter_member("test_data", [{"id": "1"}])
         with self.assertRaises(ResourceNotFoundException):
-            self.ozza.multiple_filter_member("test_data",[{"id":"1"}], condition="or")
+            self.ozza.multiple_filter_member("test_data", [{"id": "1"}], condition="or")
         self.ozza.put_member("test-data", dict(id="some-id", name="some-name", email="some-email", phone="somephone"))
         self.ozza.put_member("test-data", dict(id="some-id2", name="some-name", email="some-email2", phone="somephone"))
         with self.assertRaises(InvalidFilterFormatException):
-            self.ozza.multiple_filter_member("test-data", [{"field_name":"email", "field_value":"some-email"}])
+            self.ozza.multiple_filter_member("test-data", [{"field_name": "email", "field_value": "some-email"}])
         with self.assertRaises(InvalidFilterFormatException):
-            self.ozza.multiple_filter_member("test-data", [{"field":"email_address", "value":"some-email"}])
+            self.ozza.multiple_filter_member("test-data", [{"field": "email_address", "value": "some-email"}])
         with self.assertRaises(InvalidFilterFormatException):
-            self.ozza.multiple_filter_member("test-data", [{"field_name": "email", "field_value": "some-email"}], condition="or")
+            self.ozza.multiple_filter_member("test-data", [{"field_name": "email", "field_value": "some-email"}],
+                                             condition="or")
         with self.assertRaises(InvalidFilterFormatException):
-            self.ozza.multiple_filter_member("test-data", [{"field": "email_address", "value": "some-email"}], condition="or")
-        filters = [{"field":"phone", "value":"somephon"},{"field":"name", "value":"some-name"}]
+            self.ozza.multiple_filter_member("test-data", [{"field": "email_address", "value": "some-email"}],
+                                             condition="or")
+        filters = [{"field": "phone", "value": "somephon"}, {"field": "name", "value": "some-name"}]
         result_and = self.ozza.multiple_filter_member("test-data", filters, condition="and")
         self.assertEqual(len(result_and), 0)
         result_or = self.ozza.multiple_filter_member("test-data", filters, condition="or")
         self.assertEqual(len(result_or), 2)
 
+    def test_put_value(self):
+        with self.assertRaises(EmptyParameterException):
+            self.ozza.put_value(None, None)
+        data = self.ozza.put_value("value-test", "some-value")
+        test_value = self.ozza.get_value("value-test")
+        self.assertEqual(data, test_value)
+
+    def test_get_value(self):
+        with self.assertRaises(EmptyParameterException):
+            self.ozza.get_value(None)
+        data = self.ozza.put_value("value-test", "some-value")
+        test_value = self.ozza.get_value("value-test")
+        self.assertEqual(data, test_value)
 
     def tearDown(self):
         self.ozza._teardown_data()

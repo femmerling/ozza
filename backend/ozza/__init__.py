@@ -1,11 +1,11 @@
 import errno
 import fnmatch
 import json
+from json.decoder import JSONDecodeError
 from os import environ
 from os import makedirs
 from os import path
 from os import remove
-from json.decoder import JSONDecodeError
 
 from ozza.exceptions import EmptyParameterException
 from ozza.exceptions import FieldNotFoundException
@@ -54,7 +54,6 @@ class Ozza:
         except JSONDecodeError:
             self._memory_data = dict()
             self._persist_data()
-
 
     def _get_or_create_directory(self):
         try:
@@ -109,6 +108,18 @@ class Ozza:
             return self._update_member(key, member_value, expiry)
         else:
             return self._create_member(key, member_value, expiry)
+
+    def put_value(self, key, value):
+        if not key or not value:
+            raise EmptyParameterException()
+        self._memory_data[key] = value
+        self._persist_data()
+        return value
+
+    def get_value(self, key):
+        if not key:
+            raise EmptyParameterException()
+        return self._memory_data.get(key)
 
     def delete_member(self, key, id_value):
         if not key or not id_value:
@@ -257,15 +268,13 @@ class Ozza:
                                        self.get_resource(key))
                 filter_result = list(filter_result)
                 [result.append(item) for item in filter_result]
-                print("is start result {}".format(result))
                 is_start = False
             else:
                 if len(result) == 0:
                     return []
                 filter_result = filter(lambda item: item.get(filter_item.get("field")) == filter_item.get("value"),
                                        result)
-                result=list(filter_result)
-                print("non is start result {}".format(result))
+                result = list(filter_result)
         return result
 
     def _filter_or(self, key, filter_list):
