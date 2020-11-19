@@ -21,9 +21,6 @@ class ResourceApi(OzzaApiView):
             result = await request.ctx.service.put_value(resource, request.json)
         return json(dict(result=result))
 
-    async def post(self, request, resource):
-        result = await request.ctx.service.put_value
-
     async def delete(self, request, resource):
         result = await request.ctx.service.delete_resource(resource)
         return json(dict(result=result))
