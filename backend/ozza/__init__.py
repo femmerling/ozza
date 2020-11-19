@@ -116,11 +116,6 @@ class Ozza:
         self._persist_data()
         return value
 
-    def get_value(self, key):
-        if not key:
-            raise EmptyParameterException()
-        return self._memory_data.get(key)
-
     def delete_member(self, key, id_value):
         if not key or not id_value:
             raise EmptyParameterException()

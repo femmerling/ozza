@@ -25,6 +25,9 @@ class ApiService:
         except ResourceNotFoundException:
             return []
 
+    async def put_value(self, key, value):
+        return self.ozza.put_value(key, value)
+
     async def check_member(self, key, id_value):
         try:
             return self.ozza.check_member(key, id_value)

@@ -199,15 +199,9 @@ class OzzaTest(unittest.TestCase):
         with self.assertRaises(EmptyParameterException):
             self.ozza.put_value(None, None)
         data = self.ozza.put_value("value-test", "some-value")
-        test_value = self.ozza.get_value("value-test")
+        test_value = self.ozza.get_resource("value-test")
         self.assertEqual(data, test_value)
 
-    def test_get_value(self):
-        with self.assertRaises(EmptyParameterException):
-            self.ozza.get_value(None)
-        data = self.ozza.put_value("value-test", "some-value")
-        test_value = self.ozza.get_value("value-test")
-        self.assertEqual(data, test_value)
 
     def tearDown(self):
         self.ozza._teardown_data()
