@@ -1,4 +1,4 @@
-# Ozza Store
+ # Ozza Store
 
 In sanscrit, Ozza has a hardworking and helpful trait. This engine is designed to do that.
 Ozza is a Key-Value store engine with a HTTP Interface.
@@ -71,8 +71,16 @@ This will fetch all the member of the keys.
 <br/>Will return empty result if member not found or resource group not found.
 ### PUT /{resource}
 This will create a new member in the resource. Requires a JSON body payload with `Content-Type: Application/json` header.<br/>JSON body must have `id` field. Other than that field the JSON structure is free.
-<br/>Expiry time can be set by doing PUT `/{resource}?expire_in=[time]`. Time unit is in minutes.
+<br><br/>Currently there are 2 structures to store data:
+
+1. Using the Resource - Member relationship
+<br/>Consider this as storing data details per resource. In a way like having rows in database but the field can be customised according to your needs.
+<br/>To use this capability you need to add the member query parameter in the request and put the data you want to put in the json body. Request url will become `/{resource}?member=true` 
+<br/>Expiry time can be set by doing PUT `/{resource}?member=true&expire_in=[time]`. Time unit is in minutes.
 <br/>This is an upsert functionality. If you put the same `id` value in the same resource, the value will be updated.
+
+2. Plain Key-Value store relationship
+<br/>To use as plain key-value store put the value that you need in the json data.
 ### DELETE /{resource}
 This will delete the resource along with all the member data. Handle with care 😎
 ### HEAD /{resource}/{id}
@@ -93,10 +101,7 @@ This solution has been tested on:
 ## Further Development
 
 The following things still needs to be done:
-
-* Introduce a processing queue in core engine for data integrity
 * Improve core engine performance for data I/O using Cython or PyPy
-* Revisit core engine structure once the functionality is completed
 
 
 
