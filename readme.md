@@ -18,10 +18,8 @@ This solution is developed using python for it's simplicity. This will enable fa
 
 ## Requirements
 
-* Python3.7
-* Sanic
-* Gunicorn
-* Nosetests
+* Python3.10
+* FastAPI
 
 ## Installation
 

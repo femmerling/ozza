@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "ozza"
+version = "0.1.0"
+description = "Ozza is a key-value store with HTTP interface access."
+authors = ["Fauzan Emmerling <erich@emfeld.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+fastapi = "^0.88.0"
+pytest = "^7.2.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
