@@ -1,7 +1,8 @@
 import time
 from datetime import datetime
 
-from sanic import Sanic
+from fastapi import FastAPI
+#from sanic import Sanic
 
 from rest_api.api_service import ApiService
 from rest_api.member_api import MemberApi
@@ -10,7 +11,7 @@ from rest_api.resource_api import ResourceApi
 
 def create_api():
     service = ApiService()
-    api = Sanic(name="OzzaAPI", configure_logging=False)
+    api = FastAPI()
 
 
     @api.middleware('request')
