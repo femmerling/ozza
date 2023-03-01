@@ -5,3 +5,4 @@ cover/
 __pycache__
 *.swp
 .idea/
+*.swo
